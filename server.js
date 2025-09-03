@@ -50,6 +50,11 @@ const createUploadDirs = () => {
 };
 createUploadDirs();
 
+app.get("/", (req, res) => {
+  res.json({ message: "✅ Painter Backend is working!" });
+});
+
+
 // ✅ Serve static image files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(
