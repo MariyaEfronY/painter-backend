@@ -53,7 +53,9 @@ createUploadDirs();
 app.get("/", (req, res) => {
   res.json({ message: "✅ Painter Backend is working!" });
 });
-
+app.get("/api/test", (req, res) => {
+  res.json({ success: true, message: "API route working correctly 🚀" });
+});
 
 // ✅ Serve static image files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
