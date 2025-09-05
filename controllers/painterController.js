@@ -12,7 +12,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ---------- SIGNUP ---------- */
+// 🎯 Painter Signup
 export const painterSignup = async (req, res) => {
   try {
     const {
@@ -26,19 +26,28 @@ export const painterSignup = async (req, res) => {
       specification,
     } = req.body;
 
-    // check existing
+    // 1️⃣ Check existing
     const existingPainter = await Painter.findOne({ email });
     if (existingPainter) {
-      return res.status(400).json({ message: 'Painter already exists' });
+      return res.status(400).json({ message: "Painter already exists" });
     }
 
-    // hash password
+    // 2️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // if multer attached, we get req.file
-    const profileImage = req.file ? req.file.filename : '';
+    // 3️⃣ Upload image to Cloudinary (if provided)
+    let profileImageUrl = null;
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "painters/profileImages", // 👈 separate folder for painters
+      });
+      profileImageUrl = uploadResult.secure_url;
 
-    // create
+      // Clean up temp file
+      fs.unlinkSync(req.file.path);
+    }
+
+    // 4️⃣ Create painter
     const painter = await Painter.create({
       name,
       email,
@@ -52,21 +61,21 @@ export const painterSignup = async (req, res) => {
         : specification
         ? [specification]
         : [],
-      profileImage,
+      profileImage: profileImageUrl, // ✅ Cloudinary URL saved
     });
 
-    // generate token
+    // 5️⃣ Generate token
     const token = createToken(painter._id);
 
     res.status(201).json({
-      message: 'Painter registered successfully',
+      message: "Painter registered successfully",
       token,
       painterId: painter._id,
       painter,
     });
   } catch (error) {
-    console.error('Signup Error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Signup Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
