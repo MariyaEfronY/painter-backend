@@ -77,12 +77,13 @@ export const getUserProfile = async (req, res) => {
       phone: user.phone,
       city: user.city,
       bio: user.bio,
-      profileImage: user.profileImage
-        ? `${req.protocol}://${req.get("host")}/uploads/userProfileImages/${user.profileImage}`
-        : null,
+      profileImage: user.profileImage || null, // ✅ Direct Cloudinary URL
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch profile", error: err.message });
+    res.status(500).json({
+      message: "Failed to fetch profile",
+      error: err.message,
+    });
   }
 };
 
