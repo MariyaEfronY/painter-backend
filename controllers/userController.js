@@ -8,35 +8,43 @@ const generateToken = (id) => {
 };
 
 // ✅ Register User
+// ✅ Register User
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      // ✅ Cloudinary automatically gives req.file.path as the image URL
+      profileImage: req.file ? req.file.path : null,
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profileImage: user.profileImage,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error("❌ Error in registerUser:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    profileImage: req.file ? `/uploads/profileImages/${req.file.filename}` : null,
-  });
-
-  res.status(201).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    profileImage: user.profileImage,
-    token: generateToken(user._id),
-  });
 };
+
 
 // ✅ Login User
 export const loginUser = async (req, res) => {

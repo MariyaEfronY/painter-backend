@@ -1,43 +1,36 @@
+// middleware/uploadMiddleware.js
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ✅ Storage for profile images
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads/profileImages"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+// ✅ Painter Profile Images
+const profileStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "painterApp/painters/profileImages",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-// ✅ Storage for gallery images
-const galleryStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads/galleryImages"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-
-// ✅ Storage for USER profile images
-const userProfileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads/userProfileImages")); // separate folder
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+// ✅ User Profile Images
+const userProfileStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "painterApp/users/profileImages",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-// ✅ Create multer instances
+// ✅ Painter Gallery Images
+const galleryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "painterApp/painters/gallery",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
+});
+
+// ✅ Multer Uploaders
 export const uploadProfileImage = multer({ storage: profileStorage });
-
 export const uploadUserProfileImage = multer({ storage: userProfileStorage });
 export const uploadGalleryImage = multer({ storage: galleryStorage });
