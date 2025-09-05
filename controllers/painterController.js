@@ -26,28 +26,28 @@ export const painterSignup = async (req, res) => {
       specification,
     } = req.body;
 
-    // 1️⃣ Check existing
+    // check existing
     const existingPainter = await Painter.findOne({ email });
     if (existingPainter) {
       return res.status(400).json({ message: "Painter already exists" });
     }
 
-    // 2️⃣ Hash password
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3️⃣ Upload image to Cloudinary (if provided)
-    let profileImageUrl = null;
+    // upload profile image to Cloudinary (if provided)
+    let profileImage = "";
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "painters/profileImages", // 👈 separate folder for painters
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "painters/profileImages", // ✅ Organized folder
       });
-      profileImageUrl = uploadResult.secure_url;
+      profileImage = result.secure_url;
 
-      // Clean up temp file
+      // cleanup temp file uploaded by multer
       fs.unlinkSync(req.file.path);
     }
 
-    // 4️⃣ Create painter
+    // create painter
     const painter = await Painter.create({
       name,
       email,
@@ -61,10 +61,10 @@ export const painterSignup = async (req, res) => {
         : specification
         ? [specification]
         : [],
-      profileImage: profileImageUrl, // ✅ Cloudinary URL saved
+      profileImage,
     });
 
-    // 5️⃣ Generate token
+    // generate token
     const token = createToken(painter._id);
 
     res.status(201).json({
@@ -78,7 +78,6 @@ export const painterSignup = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 /* ---------- LOGIN ---------- */
 export const painterLogin = async (req, res) => {
   try {
