@@ -2,6 +2,7 @@ import Painter from '../models/Painter.js';
 import Booking from '../models/Booking.js';
 import bcrypt from 'bcryptjs';
 import createToken from '../utils/createToken.js';
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,7 +27,7 @@ export const painterSignup = async (req, res) => {
       specification,
     } = req.body;
 
-    // check existing
+    // check if painter already exists
     const existingPainter = await Painter.findOne({ email });
     if (existingPainter) {
       return res.status(400).json({ message: "Painter already exists" });
@@ -35,16 +36,14 @@ export const painterSignup = async (req, res) => {
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // upload profile image to Cloudinary (if provided)
+    // upload profile image to Cloudinary
     let profileImage = "";
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "painters/profileImages", // ✅ Organized folder
+        folder: "painters/profileImages",
       });
       profileImage = result.secure_url;
-
-      // cleanup temp file uploaded by multer
-      fs.unlinkSync(req.file.path);
+      // ❌ removed fs.unlinkSync — not allowed in serverless
     }
 
     // create painter
@@ -75,7 +74,10 @@ export const painterSignup = async (req, res) => {
     });
   } catch (error) {
     console.error("Signup Error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 /* ---------- LOGIN ---------- */
