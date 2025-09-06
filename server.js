@@ -5,7 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs'; // ✅ add this
+import fs from 'fs';
 
 // Routes
 import painterRoutes from './routes/painterRoutes.js';
@@ -13,19 +13,29 @@ import painterImageRoutes from './routes/painterImageRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes from "./routes/adminRoutes.js";
 import subscribeRoutes from "./routes/subscribeRoutes.js";
-
-
-// User Routes
 import userRoutes from "./routes/userRoutes.js";
-
 
 dotenv.config();
 const app = express();
-app.use(cors({
-  origin: ["http://localhost:5173", "https://painter-frontend-psi.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+
+// ✅ Dynamic CORS setup
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",")
+  : ["http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -33,13 +43,13 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Auto-create upload folders if they don’t exist
+// ✅ Auto-create upload folders
 const createUploadDirs = () => {
   const dirs = [
     path.join(__dirname, 'uploads'),
     path.join(__dirname, 'uploads/profileImages'),
     path.join(__dirname, 'uploads/galleryImages'),
-    path.join(__dirname, 'uploads/userProfileImages'), 
+    path.join(__dirname, 'uploads/userProfileImages'),
   ];
   dirs.forEach((dir) => {
     if (!fs.existsSync(dir)) {
@@ -50,6 +60,7 @@ const createUploadDirs = () => {
 };
 createUploadDirs();
 
+// Test routes
 app.get("/", (req, res) => {
   res.json({ message: "✅ Painter Backend is working!" });
 });
@@ -57,7 +68,7 @@ app.get("/api/test", (req, res) => {
   res.json({ success: true, message: "API route working correctly 🚀" });
 });
 
-// ✅ Serve static image files
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(
   "/uploads/userProfileImages",
@@ -65,18 +76,12 @@ app.use(
 );
 app.use("/uploads/galleryImages", express.static(path.join(process.cwd(), "uploads/galleryImages")));
 
-// Painter routes
+// Routes
 app.use("/api/painter", painterRoutes);
 app.use('/api/painter/images', painterImageRoutes);
 app.use('/api/bookings', bookingRoutes);
-
-// User Routes
 app.use("/api/users", userRoutes);
-
-// Admin Routes
 app.use("/api/admin", adminRoutes);
-
-// Subscribe Routes
 app.use("/api/subscribe", subscribeRoutes);
 
 // Error handling
@@ -93,10 +98,5 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('❌ MongoDB Connection Error:', err.message);
 });
 
-// ✅ Start server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`🚀 Server running at http://localhost:${PORT}`);
-// });
-
+// ✅ Export for Vercel
 export default app;
