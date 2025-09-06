@@ -27,24 +27,20 @@ export const painterSignup = async (req, res) => {
       specification,
     } = req.body;
 
-    // check if painter already exists
+    console.log("📩 Signup Request Body:", req.body);
+    console.log("📸 Signup File:", req.file);
+
+    // check existing
     const existingPainter = await Painter.findOne({ email });
     if (existingPainter) {
-      return res.status(400).json({ message: "Painter already exists" });
+      return res.status(400).json({ message: 'Painter already exists' });
     }
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // upload profile image to Cloudinary
-    let profileImage = "";
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "painters/profileImages",
-      });
-      profileImage = result.secure_url;
-      // ❌ removed fs.unlinkSync — not allowed in serverless
-    }
+    // file
+    const profileImage = req.file ? req.file.filename : '';
 
     // create painter
     const painter = await Painter.create({
@@ -63,23 +59,20 @@ export const painterSignup = async (req, res) => {
       profileImage,
     });
 
-    // generate token
     const token = createToken(painter._id);
 
     res.status(201).json({
-      message: "Painter registered successfully",
+      message: 'Painter registered successfully',
       token,
       painterId: painter._id,
       painter,
     });
   } catch (error) {
-    console.error("Signup Error:", error);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    console.error("🔥 Signup Error Details:", error); // log full error
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 /* ---------- LOGIN ---------- */
 export const painterLogin = async (req, res) => {
   try {
