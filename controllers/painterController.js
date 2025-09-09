@@ -16,19 +16,7 @@ const __dirname = path.dirname(__filename);
 // 🎯 Painter Signup
 export const painterSignup = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phoneNumber,
-      city,
-      workExperience,
-      bio,
-      specification,
-    } = req.body;
-
-    console.log("📩 Signup Request Body:", req.body);
-    console.log("📸 Signup File:", req.file);
+    const { name, email, password, phoneNumber, city, workExperience, bio, specification } = req.body;
 
     // check existing
     const existingPainter = await Painter.findOne({ email });
@@ -39,10 +27,14 @@ export const painterSignup = async (req, res) => {
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // file
-    const profileImage = req.file ? req.file.filename : '';
+    let profileImage = "";
+    if (req.file) {
+      const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "painters/profileImages",
+      });
+      profileImage = cloudinaryResult.secure_url; // ✅ Cloudinary full URL
+    }
 
-    // create painter
     const painter = await Painter.create({
       name,
       email,
@@ -56,7 +48,7 @@ export const painterSignup = async (req, res) => {
         : specification
         ? [specification]
         : [],
-      profileImage,
+      profileImage, // ✅ Now a Cloudinary URL
     });
 
     const token = createToken(painter._id);
@@ -68,10 +60,11 @@ export const painterSignup = async (req, res) => {
       painter,
     });
   } catch (error) {
-    console.error("🔥 Signup Error Details:", error); // log full error
+    console.error("🔥 Signup Error Details:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 /* ---------- LOGIN ---------- */
 export const painterLogin = async (req, res) => {
@@ -118,12 +111,13 @@ export const updatePainterProfile = async (req, res) => {
   try {
     const updates = { ...req.body };
 
-    // If image uploaded, multer stores it in req.file
     if (req.file) {
-      updates.profileImage = req.file.filename;
+      const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "painters/profileImages",
+      });
+      updates.profileImage = cloudinaryResult.secure_url; // ✅ store Cloudinary URL
     }
 
-    // req.params.id comes from /profile/:id
     const painter = await Painter.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
