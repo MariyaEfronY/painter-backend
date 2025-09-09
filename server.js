@@ -21,7 +21,10 @@ const app = express();
 // ✅ Dynamic CORS setup
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")
-  : ["http://localhost:5173"];
+  : [
+      "http://localhost:5173",
+      "https://painter-frontend-psi.vercel.app"
+    ];
 
 app.use(
   cors({

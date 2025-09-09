@@ -25,12 +25,12 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      // ✅ Cloudinary automatically gives req.file.path as the image URL
-      profileImage: req.file ? req.file.path : null,
-    });
+  name,
+  email,
+  password: hashedPassword,
+  profileImage: req.file ? req.file.path : null, // ✅ Cloudinary URL
+});
+
 
     res.status(201).json({
       _id: user._id,
@@ -100,9 +100,9 @@ export const updateUser = async (req, res) => {
     user.bio = req.body.bio || user.bio;
 
     // ✅ handle profile image if uploaded
-    if (req.file) {
-      user.profileImage = req.file.filename;
-    }
+  if (req.file) {
+  user.profileImage = req.file.path; // ✅ not filename
+}
 
     await user.save();
 
