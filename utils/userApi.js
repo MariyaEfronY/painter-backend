@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const userAPI = axios.create({
-  baseURL: "http://localhost:5000/api/users",
+  baseURL: "https://painter-backend-inky.vercel.app/api/users",
 });
 
 // ✅ Automatically attach token
