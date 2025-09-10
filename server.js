@@ -19,12 +19,10 @@ dotenv.config();
 const app = express();
 
 // ✅ Allow frontend origins (with protocol!)
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",")
-  : [
-      "http://localhost:5173",
-      "https://painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
-    ];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
+];
 
 app.use(
   cors({
