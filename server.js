@@ -21,6 +21,7 @@ const app = express();
 // ✅ Allow frontend origins (with protocol!)
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://painter-frontend-psi.vercel.app", 
   "https://painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
 ];
 
