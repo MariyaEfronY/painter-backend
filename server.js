@@ -23,7 +23,7 @@ const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")
   : [
       "http://localhost:5173",
-      "https://painter-frontend-psi.vercel.app"
+      "painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
     ];
 
 app.use(
