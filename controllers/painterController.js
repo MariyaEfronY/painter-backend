@@ -243,7 +243,14 @@ export const deleteGalleryImage = async (req, res) => {
 
 export const getAllPainters = async (req, res) => {
   try {
-    const painters = await Painter.find().select("-password");
+    const { phone, city, name } = req.query;
+    const query = {};
+
+    if (phone) query.phoneNumber = { $regex: phone, $options: "i" };
+    if (city) query.city = { $regex: city, $options: "i" };
+    if (name) query.name = { $regex: name, $options: "i" };
+
+    const painters = await Painter.find(query).select("-password");
 
     const result = painters.map((p) => ({
       _id: p._id,
@@ -251,11 +258,7 @@ export const getAllPainters = async (req, res) => {
       bio: p.bio,
       city: p.city,
       phoneNumber: p.phoneNumber,
-      profileImage: p.profileImage
-        ? p.profileImage.startsWith("http")
-          ? p.profileImage // already full URL
-          : `${process.env.BACKEND_URL}/uploads/profileImages/${p.profileImage}`
-        : null,
+      profileImage: p.profileImage || null, // ✅ Cloudinary URL already
       galleryPreview: p.gallery ? p.gallery.slice(0, 2) : [],
     }));
 
