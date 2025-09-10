@@ -246,7 +246,6 @@ export const getAllPainters = async (req, res) => {
     const { phone, city, name } = req.query;
     const query = {};
 
-    // ✅ use phoneNumber field in DB but keep req.query.phone
     if (phone) query.phoneNumber = { $regex: phone, $options: "i" };
     if (city) query.city = { $regex: city, $options: "i" };
     if (name) query.name = { $regex: name, $options: "i" };
@@ -259,8 +258,12 @@ export const getAllPainters = async (req, res) => {
       bio: p.bio,
       city: p.city,
       phoneNumber: p.phoneNumber,
-      profileImage: p.profileImage,
-      galleryPreview: p.gallery.slice(0, 2),
+      profileImage: p.profileImage
+        ? p.profileImage.startsWith("http")
+          ? p.profileImage // already full URL (Cloudinary, etc.)
+          : `${req.protocol}://${req.get("host")}/uploads/profileImages/${p.profileImage}`
+        : null,
+      galleryPreview: p.gallery ? p.gallery.slice(0, 2) : [],
     }));
 
     res.json(result);
@@ -269,6 +272,7 @@ export const getAllPainters = async (req, res) => {
     res.status(500).json({ message: "Server error: " + err.message });
   }
 };
+
 
 // Get full painter details (profile + gallery)
 export const getPainterById = async (req, res) => {
