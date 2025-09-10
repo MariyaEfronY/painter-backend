@@ -18,20 +18,21 @@ import userRoutes from "./routes/userRoutes.js";
 dotenv.config();
 const app = express();
 
-// ✅ Dynamic CORS setup
+// ✅ Allow frontend origins (with protocol!)
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")
   : [
       "http://localhost:5173",
-      "painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
+      "https://painter-frontend-lcfts38ka-mariyaefronys-projects.vercel.app"
     ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -73,10 +74,7 @@ app.get("/api/test", (req, res) => {
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(
-  "/uploads/userProfileImages",
-  express.static(path.join(__dirname, "uploads/userProfileImages"))
-);
+app.use("/uploads/userProfileImages", express.static(path.join(__dirname, "uploads/userProfileImages")));
 app.use("/uploads/galleryImages", express.static(path.join(process.cwd(), "uploads/galleryImages")));
 
 // Routes
