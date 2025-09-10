@@ -28,7 +28,7 @@ export const registerUser = async (req, res) => {
   name,
   email,
   password: hashedPassword,
-  profileImage: req.file ? req.file.path : null, // ✅ Cloudinary URL
+  profileImage: req.file?.path || null,  // ✅ safe optional chaining
 });
 
 
@@ -128,7 +128,7 @@ export const updateUser = async (req, res) => {
 
 export const getUserBookings = async (req, res) => {
   try {
-    // req.user is set by userProtect middleware
+    // req.user is set by userProtect middleware 
     const userEmail = req.user.email;
 
     const bookings = await Booking.find({ userEmail })
