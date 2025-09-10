@@ -29,10 +29,7 @@ export const painterSignup = async (req, res) => {
 
     let profileImage = "";
     if (req.file) {
-      const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "painters/profileImages",
-      });
-      profileImage = cloudinaryResult.secure_url; // ✅ Cloudinary full URL
+      profileImage = req.file.path; // ✅ CloudinaryStorage already gives Cloudinary URL
     }
 
     const painter = await Painter.create({
@@ -48,7 +45,7 @@ export const painterSignup = async (req, res) => {
         : specification
         ? [specification]
         : [],
-      profileImage, // ✅ Now a Cloudinary URL
+      profileImage, // ✅ Cloudinary URL
     });
 
     const token = createToken(painter._id);
@@ -112,10 +109,7 @@ export const updatePainterProfile = async (req, res) => {
     const updates = { ...req.body };
 
     if (req.file) {
-      const cloudinaryResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "painters/profileImages",
-      });
-      updates.profileImage = cloudinaryResult.secure_url; // ✅ store Cloudinary URL
+      updates.profileImage = req.file.path; // ✅ already Cloudinary URL
     }
 
     const painter = await Painter.findByIdAndUpdate(req.params.id, updates, {
@@ -133,6 +127,7 @@ export const updatePainterProfile = async (req, res) => {
     res.status(500).json({ message: "Error updating profile" });
   }
 };
+
 
 
 
