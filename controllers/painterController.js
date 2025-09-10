@@ -258,7 +258,11 @@ export const getAllPainters = async (req, res) => {
       bio: p.bio,
       city: p.city,
       phoneNumber: p.phoneNumber,
-      profileImage: p.profileImage || null, // ✅ Cloudinary URL already
+      profileImage: p.profileImage
+        ? p.profileImage.startsWith("http")
+          ? p.profileImage // already full URL (Cloudinary, etc.)
+          : `${req.protocol}://${req.get("host")}/uploads/profileImages/${p.profileImage}`
+        : null,
       galleryPreview: p.gallery ? p.gallery.slice(0, 2) : [],
     }));
 
@@ -268,7 +272,6 @@ export const getAllPainters = async (req, res) => {
     res.status(500).json({ message: "Server error: " + err.message });
   }
 };
-
 
 
 // Get full painter details (profile + gallery)
