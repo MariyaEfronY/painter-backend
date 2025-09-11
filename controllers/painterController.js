@@ -388,3 +388,24 @@ export const searchPainters = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const searchPaintersByPhone = async (req, res) => {
+  try {
+    const { phoneNumber } = req.query;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+
+    const painters = await Painter.find({ phoneNumber: phoneNumber });
+
+    if (painters.length === 0) {
+      return res.json([]); // return empty array if not found
+    }
+
+    res.json(painters);
+  } catch (err) {
+    console.error("Search error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
