@@ -392,20 +392,28 @@ export const searchPainters = async (req, res) => {
 
 export const searchPaintersByPhone = async (req, res) => {
   try {
-    const { phoneNumber } = req.query;
-    if (!phoneNumber) {
-      return res.status(400).json({ message: "Phone number is required" });
+    const { phoneNumber, city } = req.query;
+
+    let query = {};
+
+    if (phoneNumber) {
+      // ✅ Allow partial matches, case-insensitive
+      query.phoneNumber = { $regex: phoneNumber, $options: "i" };
     }
 
-    const painters = await Painter.find({ phoneNumber: phoneNumber });
+    if (city) {
+      query.city = { $regex: city, $options: "i" };
+    }
 
-    if (painters.length === 0) {
-      return res.json([]); // return empty array if not found
+    const painters = await Painter.find(query);
+
+    if (!painters.length) {
+      return res.status(404).json({ message: "No painters found" });
     }
 
     res.json(painters);
-  } catch (err) {
-    console.error("Search error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+  } catch (error) {
+    console.error("❌ Search error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
