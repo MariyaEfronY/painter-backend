@@ -2,7 +2,7 @@ import Painter from '../models/Painter.js';
 import Booking from '../models/Booking.js';
 import bcrypt from 'bcryptjs';
 import createToken from '../utils/createToken.js';
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -131,17 +131,21 @@ export const updatePainterProfile = async (req, res) => {
 
 
 
-// Add image to gallery
+// ✅ Add gallery image (Cloudinary)
 export const addGalleryImage = async (req, res) => {
   try {
-    const painterId = req.painter._id; // ✅ FIXED: use req.painter from middleware
+    const painterId = req.painter._id; // comes from auth middleware
     const { description } = req.body;
 
     const painter = await Painter.findById(painterId);
     if (!painter) return res.status(404).json({ message: "Painter not found" });
 
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
     const newImage = {
-      image: `/uploads/galleryImages/${req.file.filename}`, // ✅ saved path
+      image: req.file.path, // ✅ Cloudinary URL directly
       description,
     };
 
@@ -158,14 +162,11 @@ export const addGalleryImage = async (req, res) => {
   }
 };
 
-
 // ✅ Fetch Painter's Gallery
 export const getGallery = async (req, res) => {
   try {
     const painter = await Painter.findById(req.painter._id).select("gallery");
-    if (!painter) {
-      return res.status(404).json({ message: "Painter not found" });
-    }
+    if (!painter) return res.status(404).json({ message: "Painter not found" });
 
     res.status(200).json({ gallery: painter.gallery });
   } catch (err) {
@@ -173,8 +174,7 @@ export const getGallery = async (req, res) => {
   }
 };
 
-
-// ✅ Edit gallery image description
+// ✅ Update gallery description
 export const updateGallery = async (req, res) => {
   try {
     const { imageId } = req.params;
@@ -186,7 +186,6 @@ export const updateGallery = async (req, res) => {
     const image = painter.gallery.id(imageId);
     if (!image) return res.status(404).json({ message: "Image not found" });
 
-    // Update description
     image.description = description || image.description;
     await painter.save();
 
@@ -196,30 +195,23 @@ export const updateGallery = async (req, res) => {
   }
 };
 
-// ✅ Delete gallery image (correct)
-// ✅ Delete gallery image (fixed)
+// ✅ Delete gallery image from Cloudinary
+
 export const deleteGalleryImage = async (req, res) => {
   try {
-    const { id } = req.params; // ✅ match router param
+    const { id } = req.params;
 
     const painter = await Painter.findById(req.painter._id);
-    if (!painter) {
-      return res.status(404).json({ message: "Painter not found" });
-    }
+    if (!painter) return res.status(404).json({ message: "Painter not found" });
 
     const imageDoc = painter.gallery.id(id);
-    if (!imageDoc) {
-      return res.status(404).json({ message: "Image not found" });
-    }
+    if (!imageDoc) return res.status(404).json({ message: "Image not found" });
 
-    // remove file from disk if exists
+    // Delete from Cloudinary if URL exists
     if (imageDoc.image) {
-      const relativePath = imageDoc.image.replace(/^\//, "");
-      const absolutePath = path.join(__dirname, "..", relativePath);
-
-      if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
-      }
+      // Extract public_id from Cloudinary URL
+      const publicId = imageDoc.image.split("/").slice(-1)[0].split(".")[0];
+      await cloudinary.uploader.destroy(`painterApp/painters/gallery/${publicId}`);
     }
 
     imageDoc.deleteOne();
@@ -234,7 +226,6 @@ export const deleteGalleryImage = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 
 /* ---------- Bookings ---------- */
