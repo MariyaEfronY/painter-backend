@@ -394,23 +394,28 @@ export const searchPaintersByPhone = async (req, res) => {
   try {
     const { phoneNumber, city } = req.query;
 
+    if (!phoneNumber && !city) {
+      return res.status(400).json({ message: "Please provide phoneNumber or city" });
+    }
+
     let query = {};
 
     if (phoneNumber) {
-      query.phoneNumber = phoneNumber; // ✅ exact match
+      query.phoneNumber = phoneNumber.trim(); // ✅ exact match, avoid extra spaces
     }
 
     if (city) {
-      query.city = { $regex: `^${city}$`, $options: "i" }; // ✅ case-insensitive exact city
+      query.city = { $regex: `^${city}$`, $options: "i" }; // ✅ exact city match
     }
 
-    const painters = await Painter.find(query);
+    // ✅ Find ONE painter by phone
+    const painter = await Painter.findOne(query);
 
-    if (!painters.length) {
-      return res.status(404).json({ message: "No painters found" });
+    if (!painter) {
+      return res.status(404).json({ message: "No painter found" });
     }
 
-    res.json(painters);
+    res.json(painter); // ✅ return single object, not array
   } catch (error) {
     console.error("❌ Search error:", error);
     res.status(500).json({ message: "Server error" });
