@@ -72,7 +72,7 @@ router.get("/bookings/me", userProtect, getUserBookings);
 router.put("/bookings/:bookingId/status", painterProtect, updateBookingStatus);
 
 // Search painters by phone
-router.get("/painters/search", searchPaintersByPhone);
+router.get("/painter/search", searchPaintersByPhone);
 
 
 
