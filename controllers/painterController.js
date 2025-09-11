@@ -397,12 +397,11 @@ export const searchPaintersByPhone = async (req, res) => {
     let query = {};
 
     if (phoneNumber) {
-      // ✅ Allow partial matches, case-insensitive
-      query.phoneNumber = { $regex: phoneNumber, $options: "i" };
+      query.phoneNumber = phoneNumber; // ✅ exact match
     }
 
     if (city) {
-      query.city = { $regex: city, $options: "i" };
+      query.city = { $regex: `^${city}$`, $options: "i" }; // ✅ case-insensitive exact city
     }
 
     const painters = await Painter.find(query);
