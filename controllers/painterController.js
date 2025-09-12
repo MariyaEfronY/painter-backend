@@ -12,16 +12,15 @@ import { fileURLToPath } from "url";
 // ✅ Define __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 // 🎯 Painter Signup
 export const painterSignup = async (req, res) => {
   try {
     const { name, email, password, phoneNumber, city, workExperience, bio, specification } = req.body;
 
-    // check existing
+    // check existing by email
     const existingPainter = await Painter.findOne({ email });
     if (existingPainter) {
-      return res.status(400).json({ message: 'Painter already exists' });
+      return res.status(400).json({ message: "Painter already exists" });
     }
 
     // hash password
@@ -29,7 +28,7 @@ export const painterSignup = async (req, res) => {
 
     let profileImage = "";
     if (req.file) {
-      profileImage = req.file.path; // ✅ CloudinaryStorage already gives Cloudinary URL
+      profileImage = req.file.path; // cloudinary or local URL
     }
 
     const painter = await Painter.create({
@@ -45,22 +44,23 @@ export const painterSignup = async (req, res) => {
         : specification
         ? [specification]
         : [],
-      profileImage, // ✅ Cloudinary URL
+      profileImage,
     });
 
     const token = createToken(painter._id);
 
     res.status(201).json({
-      message: 'Painter registered successfully',
+      message: "Painter registered successfully",
       token,
       painterId: painter._id,
       painter,
     });
   } catch (error) {
-    console.error("🔥 Signup Error Details:", error);
+    console.error("🔥 Signup Error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 /* ---------- LOGIN ---------- */
@@ -390,35 +390,25 @@ export const searchPainters = async (req, res) => {
 };
 
 
-// controllers/painterController.js
+// 🎯 Search Painter by Phone Number (exact)
 export const searchPaintersByPhone = async (req, res) => {
   try {
-    const { phoneNumber, city } = req.query;
+    const { phoneNumber } = req.query;
 
-    if (!phoneNumber && !city) {
-      return res.status(400).json({ message: "Please provide phoneNumber or city" });
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
     }
 
-    let query = {};
+    // ✅ Find ONE exact painter
+    const painter = await Painter.findOne({ phoneNumber: phoneNumber.trim() });
 
-    if (phoneNumber) {
-      query.phoneNumber = phoneNumber.trim(); // exact match
+    if (!painter) {
+      return res.status(404).json({ message: "No painter found with this phone number" });
     }
 
-    if (city) {
-      query.city = { $regex: `^${city}$`, $options: "i" }; // case-insensitive
-    }
-
-    // ✅ Find ALL painters that match
-    const painters = await Painter.find(query);
-
-    if (!painters || painters.length === 0) {
-      return res.status(404).json({ message: "No painter found" });
-    }
-
-    res.json(painters); // ✅ return array
+    res.json(painter); // ✅ return single painter object
   } catch (error) {
-    console.error("❌ Search error:", error);
+    console.error("❌ Search Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -5,6 +5,7 @@ const PainterSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   phoneNumber: String,
+  normalizedPhone: { type: String, index: true },
   city: String,
   workExperience: String,
   bio: String,
