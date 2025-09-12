@@ -15,8 +15,7 @@ import {
   getUserBookings,
   updateBookingStatus,
   painterLogout,
-  searchPainters,
-  searchPaintersByPhone 
+  searchPainters
 } from "../controllers/painterController.js";
 
 import { painterProtect } from "../middleware/auth.js";
@@ -73,7 +72,7 @@ router.put("/bookings/:bookingId/status", painterProtect, updateBookingStatus);
 
 
 // routes/painterRoutes.js
-router.get("/painters/search", searchPaintersByPhone);
+router.get("/search", searchPainters);
 
 
 

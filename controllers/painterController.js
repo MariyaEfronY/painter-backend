@@ -370,45 +370,30 @@ export const painterLogout = async (req, res) => {
   }
 };
 
-// ✅ Search painters by phone, city, or name
+// ✅ Search painters with flexible filters
 export const searchPainters = async (req, res) => {
-  const { phone, city } = req.query;
-
   try {
-    const query = {};
+    const { phone, city, name } = req.query;
 
-    if (phone) query.phoneNumber = phone; // ✅ matches your schema
-    if (city) query.city = { $regex: city, $options: "i" }; // case-insensitive search
+    let query = {};
+
+    if (phone) {
+      query.phone = phone; // exact match
+    }
+    if (city) {
+      query.city = { $regex: city, $options: "i" }; // case-insensitive partial
+    }
+    if (name) {
+      query.name = { $regex: name, $options: "i" };
+    }
 
     const painters = await Painter.find(query);
+    if (painters.length === 0) {
+      return res.status(404).json({ message: "No painters found" });
+    }
 
     res.json(painters);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-// 🎯 Search Painter by Phone Number (exact)
-export const searchPaintersByPhone = async (req, res) => {
-  try {
-    const { phoneNumber } = req.query;
-
-    if (!phoneNumber) {
-      return res.status(400).json({ message: "Phone number is required" });
-    }
-
-    // ✅ Find ONE exact painter
-    const painter = await Painter.findOne({ phoneNumber: phoneNumber.trim() });
-
-    if (!painter) {
-      return res.status(404).json({ message: "No painter found with this phone number" });
-    }
-
-    res.json(painter); // ✅ return single painter object
-  } catch (error) {
-    console.error("❌ Search Error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 };
