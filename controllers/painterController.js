@@ -370,30 +370,24 @@ export const painterLogout = async (req, res) => {
   }
 };
 
-// ✅ Search painters with flexible filters
+// Search painter by phone number
 export const searchPainters = async (req, res) => {
   try {
-    const { phone, city, name } = req.query;
+    const { phoneNumber } = req.query;
 
-    let query = {};
-
-    if (phone) {
-      query.phone = phone; // exact match
-    }
-    if (city) {
-      query.city = { $regex: city, $options: "i" }; // case-insensitive partial
-    }
-    if (name) {
-      query.name = { $regex: name, $options: "i" };
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
     }
 
-    const painters = await Painter.find(query);
-    if (painters.length === 0) {
-      return res.status(404).json({ message: "No painters found" });
+    const painter = await Painter.findOne({ phone: phoneNumber });
+
+    if (!painter) {
+      return res.status(404).json({ message: "Painter not found" });
     }
 
-    res.json(painters);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    // ✅ Return only one painter object
+    res.status(200).json(painter);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
