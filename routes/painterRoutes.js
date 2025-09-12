@@ -72,8 +72,9 @@ router.get("/bookings/me", userProtect, getUserBookings);
 router.put("/bookings/:bookingId/status", painterProtect, updateBookingStatus);
 
 
-// GET /api/painters/search/phone?phoneNumber=..
-router.get("/painters/search/phone", searchPaintersByPhone);
+// routes/painterRoutes.js
+router.get("/painters/search", searchPaintersByPhone);
+
 
 
 
