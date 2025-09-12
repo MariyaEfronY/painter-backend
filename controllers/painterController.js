@@ -390,6 +390,7 @@ export const searchPainters = async (req, res) => {
 };
 
 
+// controllers/painterController.js
 export const searchPaintersByPhone = async (req, res) => {
   try {
     const { phoneNumber, city } = req.query;
@@ -401,21 +402,21 @@ export const searchPaintersByPhone = async (req, res) => {
     let query = {};
 
     if (phoneNumber) {
-      query.phoneNumber = phoneNumber.trim(); // ✅ exact match, avoid extra spaces
+      query.phoneNumber = phoneNumber.trim(); // exact match
     }
 
     if (city) {
-      query.city = { $regex: `^${city}$`, $options: "i" }; // ✅ exact city match
+      query.city = { $regex: `^${city}$`, $options: "i" }; // case-insensitive
     }
 
-    // ✅ Find ONE painter by phone
-    const painter = await Painter.findOne(query);
+    // ✅ Find ALL painters that match
+    const painters = await Painter.find(query);
 
-    if (!painter) {
+    if (!painters || painters.length === 0) {
       return res.status(404).json({ message: "No painter found" });
     }
 
-    res.json(painter); // ✅ return single object, not array
+    res.json(painters); // ✅ return array
   } catch (error) {
     console.error("❌ Search error:", error);
     res.status(500).json({ message: "Server error" });
